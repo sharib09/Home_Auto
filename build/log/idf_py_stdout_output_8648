@@ -1,0 +1,54 @@
+Command: cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=D:\Espressif\python_env\idf5.5_py3.11_env\Scripts\python.exe -DESP_PLATFORM=1 -DSDKCONFIG='d:\Per\BLE_Mesh\onoff_server\sdkconfig' -DCCACHE_ENABLE=1 D:\Per\BLE_Mesh\onoff_server
+-- Found Git: D:/Espressif/tools/idf-git/2.39.2/cmd/git.exe (found version "2.39.2.windows.1")
+-- Minimal build - ON
+-- ccache will be used for faster recompilation
+-- The C compiler identification is GNU 14.2.0
+-- The CXX compiler identification is GNU 14.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: D:/Espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/Espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- git rev-parse returned 'fatal: not a git repository (or any of the parent directories): .git'
+-- Could not use 'git describe' to determine PROJECT_VER.
+-- Building ESP-IDF components for target esp32
+NOTICE: Dependencies lock doesn't exist, solving dependencies.
+NOTICE: Using component placed at D:\Espressif\frameworks\esp-idf-v5.5.1\examples\bluetooth\esp_ble_mesh\common_components\example_init for dependency "example_init", specified in D:\Per\BLE_Mesh\onoff_server\main\idf_component.yml
+.NOTICE: Updating lock file at D:\Per\BLE_Mesh\onoff_server\dependencies.lock
+NOTICE: Processing 2 dependencies:
+NOTICE: [1/2] example_init (*) (D:\Espressif\frameworks\esp-idf-v5.5.1\examples\bluetooth\esp_ble_mesh\common_components\example_init)
+NOTICE: [2/2] idf (5.5.1)
+-- Project sdkconfig file D:/Per/BLE_Mesh/onoff_server/sdkconfig
+Loading defaults file D:/Per/BLE_Mesh/onoff_server/sdkconfig.defaults...
+Loading defaults file D:/Per/BLE_Mesh/onoff_server/sdkconfig.defaults.esp32...
+-- Compiler supported targets: xtensa-esp-elf
+-- Found Python3: D:/Espressif/python_env/idf5.5_py3.11_env/Scripts/python.exe (found version "3.11.2") found components: Interpreter
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Performing Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS
+-- Performing Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS - Success
+-- USING O3
+-- App "onoff_server" version: 1
+-- Adding linker script D:/Per/BLE_Mesh/onoff_server/build/esp-idf/esp_system/ld/memory.ld
+-- Adding linker script D:/Per/BLE_Mesh/onoff_server/build/esp-idf/esp_system/ld/sections.ld.in
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.api.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.libgcc.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.newlib-data.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.syscalls.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.libc-funcs.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom/esp32/ld/esp32.rom.newlib-reent-funcs.ld
+-- Adding linker script D:/Espressif/frameworks/esp-idf-v5.5.1/components/soc/esp32/ld/esp32.peripherals.ld
+-- Components: app_update bootloader bootloader_support bt cxx efuse esp_app_format esp_bootloader_format esp_coex esp_common esp_driver_gpio esp_driver_spi esp_driver_uart esp_driver_usb_serial_jtag esp_event esp_gdbstub esp_hw_support esp_mm esp_netif esp_netif_stack esp_partition esp_phy esp_pm esp_ringbuf esp_rom esp_security esp_system esp_timer esp_vfs_console esp_wifi esptool_py example_init freertos hal heap log lwip main mbedtls newlib nvs_flash partition_table pthread soc spi_flash vfs wpa_supplicant xtensa
+-- Component paths: D:/Espressif/frameworks/esp-idf-v5.5.1/components/app_update D:/Espressif/frameworks/esp-idf-v5.5.1/components/bootloader D:/Espressif/frameworks/esp-idf-v5.5.1/components/bootloader_support D:/Espressif/frameworks/esp-idf-v5.5.1/components/bt D:/Espressif/frameworks/esp-idf-v5.5.1/components/cxx D:/Espressif/frameworks/esp-idf-v5.5.1/components/efuse D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_app_format D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_bootloader_format D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_coex D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_common D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_driver_gpio D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_driver_spi D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_driver_uart D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_driver_usb_serial_jtag D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_event D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_gdbstub D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_hw_support D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_mm D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_netif D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_netif_stack D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_partition D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_phy D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_pm D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_ringbuf D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_rom D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_security D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_system D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_timer D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_vfs_console D:/Espressif/frameworks/esp-idf-v5.5.1/components/esp_wifi D:/Espressif/frameworks/esp-idf-v5.5.1/components/esptool_py D:/Espressif/frameworks/esp-idf-v5.5.1/examples/bluetooth/esp_ble_mesh/common_components/example_init D:/Espressif/frameworks/esp-idf-v5.5.1/components/freertos D:/Espressif/frameworks/esp-idf-v5.5.1/components/hal D:/Espressif/frameworks/esp-idf-v5.5.1/components/heap D:/Espressif/frameworks/esp-idf-v5.5.1/components/log D:/Espressif/frameworks/esp-idf-v5.5.1/components/lwip D:/Per/BLE_Mesh/onoff_server/main D:/Espressif/frameworks/esp-idf-v5.5.1/components/mbedtls D:/Espressif/frameworks/esp-idf-v5.5.1/components/newlib D:/Espressif/frameworks/esp-idf-v5.5.1/components/nvs_flash D:/Espressif/frameworks/esp-idf-v5.5.1/components/partition_table D:/Espressif/frameworks/esp-idf-v5.5.1/components/pthread D:/Espressif/frameworks/esp-idf-v5.5.1/components/soc D:/Espressif/frameworks/esp-idf-v5.5.1/components/spi_flash D:/Espressif/frameworks/esp-idf-v5.5.1/components/vfs D:/Espressif/frameworks/esp-idf-v5.5.1/components/wpa_supplicant D:/Espressif/frameworks/esp-idf-v5.5.1/components/xtensa
+-- Configuring done (64.3s)
+-- Generating done (5.2s)
+-- Build files have been written to: D:/Per/BLE_Mesh/onoff_server/build
