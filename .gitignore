@@ -1,1 +1,25 @@
+# Build output
+build/
+*.bin
+*.elf
+*.map
+
+# Local config/cache
+sdkconfig
+sdkconfig.old
+sdkconfig.ci
+CMakeCache.txt
+cmake-build-*/
+*.log
+
+# Python + IDE junk
+*.pyc
+__pycache__/
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
 build/
