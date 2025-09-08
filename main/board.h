@@ -20,6 +20,9 @@ extern "C" {
 #define LED_R GPIO_NUM_25
 #define LED_G GPIO_NUM_26
 #define LED_B GPIO_NUM_27
+#define LED_V GPIO_NUM_33
+#define LED_I GPIO_NUM_34
+#define LED_C GPIO_NUM_35
 #elif defined(CONFIG_BLE_MESH_ESP_WROVER)
 #define LED_R GPIO_NUM_0
 #define LED_G GPIO_NUM_2
@@ -61,6 +64,7 @@ struct _led_state {
 };
 
 void board_led_operation(uint8_t pin, uint8_t onoff);
+void control_state_operation(uint8_t pin, uint8_t onoff);
 
 void board_init(void);
 

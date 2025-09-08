@@ -25,6 +25,12 @@
 #include "board.h"
 #include "ble_mesh_example_init.h"
 
+#include "boardDef.h"
+
+extern struct _led_state led_state[3];
+extern struct _led_state control_state[6];
+struct _led_state *control=NULL;
+
 #define TAG "EXAMPLE"
 
 #define CID_ESP 0x02E5
@@ -160,17 +166,47 @@ static void example_change_led_state(esp_ble_mesh_model_t *model,
         for (i = 0; i < elem_count; i++) {
             if (ctx->recv_dst == (primary_addr + i)) {
                 led = &led_state[i];
-                board_led_operation(led->pin, onoff);
+                //board_led_operation(led->pin, onoff);
+                   control=&control_state[i];
+               // board_led_operation(led->pin, onoff);
+                control_state_operation(control->pin, onoff);
+                L1=control_state[0].previous;
+                L2=control_state[1].previous;
+                L3=control_state[2].previous;
+                L4=control_state[3].previous;
+                F=control_state[4].previous;
+                S=control_state[5].previous;
+                control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
             }
         }
     } else if (ESP_BLE_MESH_ADDR_IS_GROUP(ctx->recv_dst)) {
         if (esp_ble_mesh_is_model_subscribed_to_group(model, ctx->recv_dst)) {
             led = &led_state[model->element->element_addr - primary_addr];
-            board_led_operation(led->pin, onoff);
+            //board_led_operation(led->pin, onoff);
+               control=&control_state[i];
+               // board_led_operation(led->pin, onoff);
+                control_state_operation(control->pin, onoff);
+                L1=control_state[0].previous;
+                L2=control_state[1].previous;
+                L3=control_state[2].previous;
+                L4=control_state[3].previous;
+                F=control_state[4].previous;
+                S=control_state[5].previous;
+                control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
         }
     } else if (ctx->recv_dst == 0xFFFF) {
-        led = &led_state[model->element->element_addr - primary_addr];
-        board_led_operation(led->pin, onoff);
+       // led = &led_state[model->element->element_addr - primary_addr];
+       // board_led_operation(led->pin, onoff);
+           control=&control_state[i];
+               // board_led_operation(led->pin, onoff);
+                control_state_operation(control->pin, onoff);
+                L1=control_state[0].previous;
+                L2=control_state[1].previous;
+                L3=control_state[2].previous;
+                L4=control_state[3].previous;
+                F=control_state[4].previous;
+                S=control_state[5].previous;
+                control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
     }
 }
 
