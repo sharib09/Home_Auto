@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -25,11 +26,24 @@
 #include "board.h"
 #include "ble_mesh_example_init.h"
 
-#include "boardDef.h"
-
 extern struct _led_state led_state[3];
 extern struct _led_state control_state[6];
 struct _led_state *control=NULL;
+
+bool L1;
+bool L2;
+bool L3;
+bool L4;
+bool F;
+bool FS1;
+bool FS2;
+bool FS3;
+bool S;
+
+unsigned char control_data = 0;
+bool uart_recieve_flag = false;
+unsigned char recieved_control_data = 0;
+uint8_t ReceivedByte = 0;
 
 #define TAG "EXAMPLE"
 
@@ -89,7 +103,7 @@ static esp_ble_mesh_gen_onoff_srv_t onoff_server_3 = {
         .set_auto_rsp = ESP_BLE_MESH_SERVER_RSP_BY_APP,
     },
 };
-ESP_BLE_MESH_MODEL_PUB_DEFINE(level_pub,2+6,ROLE_NODE);
+ESP_BLE_MESH_MODEL_PUB_DEFINE(level_pub,2+3,ROLE_NODE);
 static esp_ble_mesh_gen_level_srv_t level_server= {
     .rsp_ctrl = {
         .get_auto_rsp = ESP_BLE_MESH_SERVER_AUTO_RSP,
@@ -160,7 +174,7 @@ static void example_change_led_state(esp_ble_mesh_model_t *model,
     uint16_t primary_addr = esp_ble_mesh_get_primary_element_address();
     uint8_t elem_count = esp_ble_mesh_get_element_count();
     struct _led_state *led = NULL;
-    uint8_t i;
+    uint8_t i=0;;
 
     if (ESP_BLE_MESH_ADDR_IS_UNICAST(ctx->recv_dst)) {
         for (i = 0; i < elem_count; i++) {
@@ -174,9 +188,14 @@ static void example_change_led_state(esp_ble_mesh_model_t *model,
                 L2=control_state[1].previous;
                 L3=control_state[2].previous;
                 L4=control_state[3].previous;
-                F=control_state[4].previous;
-                S=control_state[5].previous;
+             //   F=control_state[4].previous;
+             //   S=control_state[5].previous;
                 control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
+                ESP_LOGI(TAG, "L1_state 0x%02x", L1);
+                ESP_LOGI(TAG, "L2_state 0x%02x", L2);
+                ESP_LOGI(TAG, "L3_state 0x%02x", L3);
+                ESP_LOGI(TAG, "L4_state 0x%02x", L4);
+                               
             }
         }
     } else if (ESP_BLE_MESH_ADDR_IS_GROUP(ctx->recv_dst)) {
@@ -190,8 +209,8 @@ static void example_change_led_state(esp_ble_mesh_model_t *model,
                 L2=control_state[1].previous;
                 L3=control_state[2].previous;
                 L4=control_state[3].previous;
-                F=control_state[4].previous;
-                S=control_state[5].previous;
+             //   F=control_state[4].previous;
+              //  S=control_state[5].previous;
                 control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
         }
     } else if (ctx->recv_dst == 0xFFFF) {
@@ -204,8 +223,8 @@ static void example_change_led_state(esp_ble_mesh_model_t *model,
                 L2=control_state[1].previous;
                 L3=control_state[2].previous;
                 L4=control_state[3].previous;
-                F=control_state[4].previous;
-                S=control_state[5].previous;
+             //   F=control_state[4].previous;
+              //  S=control_state[5].previous;
                 control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
     }
 }
@@ -241,6 +260,319 @@ static void example_handle_gen_onoff_msg(esp_ble_mesh_model_t *model,
         break;
     }
 }
+
+static inline void put_le16(uint8_t *dst, int16_t v)
+{
+    dst[0] = (uint8_t)(v & 0xFF);
+    dst[1] = (uint8_t)((uint16_t)v >> 8);
+}
+
+static void example_handle_gen_fan_msg_recieve(esp_ble_mesh_model_t *model,
+        esp_ble_mesh_msg_ctx_t *ctx,
+        esp_ble_mesh_server_recv_gen_level_set_t *set)
+{
+	 esp_ble_mesh_gen_level_srv_t *lvl =model->user_data;
+
+	 if (uart_recieve_flag==true)
+	 {
+		 recieved_control_data=ReceivedByte;
+		 if(((ReceivedByte)&(0b10000000))==0X80)
+		              	{L1=1;}
+		              	if(((ReceivedByte)&(0b10000000))==0)
+		              	{L1=0;}
+		              	if(((ReceivedByte)&(0b01000000))==0x40)
+		              	{
+		              		L2=1;
+		              	}
+		              	if(((ReceivedByte)&(0b01000000))==0)
+		              	{
+		              		L2=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00100000))==0x20)
+		              	{
+		              		L3=1;
+		              	}
+		              	if(((ReceivedByte)&(0b00100000))==0)
+		              	{
+		              		L3=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00010000))==0X10)
+		              	{
+		              		L4=1;
+		              	}
+		              	if(((ReceivedByte)&(0b00010000))==0)
+		              	{
+		              		L4=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00001000))==0X08)
+		              	{
+		              		F=1;
+		              	}
+		              	if(((ReceivedByte)&(0b00001000))==0)
+		              	{
+		              		F=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00000001))==0X01)
+		              	{
+		              		FS1=1;
+
+		              	}
+
+		              	if(((ReceivedByte)&(0b00000001))==0X00)
+		              	{
+		              		FS1=0;
+
+		              	}
+		              	if(((ReceivedByte)&(0b00000010))==0X02)
+		              	{
+		              		FS2=1;
+
+		              	}
+		              	if(((ReceivedByte)&(0b00000010))==0)
+		              	{
+		              		FS2=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00000011))==0X03)
+		              	{
+		              		FS1=1;
+		              		FS2=1;
+		              	}
+		              	if(((ReceivedByte)&(0b00000011))==0)
+		              	{
+		              		FS1=0;
+		              		FS2=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00000100))==0X04)
+		              	{
+		              		FS3=1;
+		              	}
+		              	if(((ReceivedByte)&(0b00000100))==0)
+		              	{
+		              		FS3=0;
+		              	}
+		              	if(((ReceivedByte)&(0b00000101))==0X05)
+		              	{
+		              		FS1=1;
+		              		FS3=1;
+		              	}
+		              	if(((ReceivedByte)&(0b00000101))==0)
+		              	{
+		              		FS1=0;
+		              		FS3=0;
+		              	}
+		              	if ((FS3==0)&&(FS2==0)&&(FS1==0))
+		              			              	                           		{
+		              			              		lvl->state.level=-32768;
+		              			              	                           		}
+
+		              	 if ((FS3==0)&&(FS2==0)&&(FS1==1))
+		              	                           		{
+		              		lvl->state.level=-19661;
+		              	                           		}
+		              	                           		if((FS3==0)&&(FS2==1)&&(FS1==0))
+		              	                           		{
+		              	                           		lvl->state.level=-6554;
+		              	                           		}
+		              	                           		if((FS3==0)&&(FS2==1)&&(FS1==1))
+		              	                           		{
+		              	                           		lvl->state.level=6553;
+		              	                           		}
+		              	                           		if((FS3==1)&&(FS2==0)&&(FS1==0))
+		              	                           		{
+		              	                           		lvl->state.level=19660;
+		              	                           		}
+		              	                           		if((FS3==1)&&(FS2==0)&&(FS1==1))
+		              	                           		{
+		              	                           		lvl->state.level=32762;
+		              	                           		}
+
+		              	                           	control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
+
+		              	                          uint8_t status[2];
+put_le16(status, lvl->state.level);
+esp_ble_mesh_server_model_send_msg(model, ctx,
+    ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_STATUS, sizeof(status), status);
+		              	                                  ESP_LOGI(TAG, "get_level_get %d",lvl->state.level );
+		              	                                uart_recieve_flag=false;
+
+
+	 }
+	 else
+	 {
+		 uint8_t status[2];
+put_le16(status, lvl->state.level);
+esp_ble_mesh_server_model_send_msg(model, ctx,
+    ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_STATUS, sizeof(status), status);
+				              	                                  ESP_LOGI(TAG, "get_level %d",lvl->state.level );
+				              	                                control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
+	 }
+}
+
+static void example_change_control_state(esp_ble_mesh_model_t *model,
+                                     esp_ble_mesh_msg_ctx_t *ctx, int16_t level)
+{
+    uint16_t primary_addr = esp_ble_mesh_get_primary_element_address();
+    uint8_t elem_count = esp_ble_mesh_get_element_count();
+    ESP_LOGI(TAG, "primary address is %x",primary_addr);
+
+    struct _led_state *control=NULL;
+    uint8_t i;
+    int16_t c=level;
+        uint16_t b = 32768;
+        uint16_t a=b+c;
+        ESP_LOGI(TAG, "level %d", a);
+
+    if (ESP_BLE_MESH_ADDR_IS_UNICAST(ctx->recv_dst)) {
+    	 ESP_LOGI(TAG, "fan address is unicast");
+        for (i = 0; i < elem_count; i++) {
+            if (ctx->recv_dst == (primary_addr + i)) {
+               // led = &led_state[i];
+                if(a>0&&a<=13107)
+                {
+                	FS1=1;
+                	FS2=0;
+                	FS3=0;
+                }
+                else if(a>13107&&a<=26214)
+                {
+                	FS1=0;
+                	FS2=1;
+                	FS3=0;
+                }
+                else if(a>26214&&a<=39321)
+                              {
+                               	FS1=1;
+                               	FS2=1;
+                               	FS3=0;
+                               }
+                else if(a>39321&&a<=52428)
+                               {
+                               	FS1=0;
+                               	FS2=0;
+                               	FS3=1;
+                               }
+                else if(a>52428&&a<=65535)
+                               {
+                               	FS1=1;
+                               	FS2=0;
+                               	FS3=1;
+                               }
+                else if(a==0)
+                                            {
+                                            	FS1=0;
+                                            	FS2=0;
+                                            	FS3=0;
+                                            }
+                control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
+
+            }
+        }
+    } else if (ESP_BLE_MESH_ADDR_IS_GROUP(ctx->recv_dst)) {
+    	ESP_LOGI(TAG, "fan address is group");
+        if (esp_ble_mesh_is_model_subscribed_to_group(model, ctx->recv_dst)) {
+            //led = &led_state[model->element->element_addr - primary_addr];
+            //board_led_operation(led->pin, onoff);
+            control=&control_state[model->element->element_addr -primary_addr];
+            if(a>0&&a<=13107)
+                            {
+                            	FS1=1;
+                            	FS2=0;
+                            	FS3=0;
+                            }
+                            else if(a>13107&&a<=26214)
+                            {
+                            	FS1=0;
+                            	FS2=1;
+                            	FS3=0;
+                            }
+                            else if(a>26214&&a<=39321)
+                                          {
+                                           	FS1=1;
+                                           	FS2=1;
+                                           	FS3=0;
+                                           }
+                            else if(a>39321&&a<=52428)
+                                           {
+                                           	FS1=0;
+                                           	FS2=0;
+                                           	FS3=1;
+                                           }
+                            else if((a>52428)&&(a<=65535))
+                                           {
+                                           	FS1=1;
+                                           	FS2=0;
+                                           	FS3=1;
+                                           }
+                            else if(a==0)
+                            {
+                            	FS1=0;
+                            	FS2=0;
+                            	FS3=0;
+                            }
+
+                           control_data=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(FS3<<2)|(FS2<<1)|(FS1<<0);
+        }
+    } else if (ctx->recv_dst == 0xFFFF) {
+        //led = &led_state[model->element->element_addr - primary_addr];
+        //board_led_operation(led->pin, onoff);
+        control=&control_state[model->element->element_addr -primary_addr];
+
+        L1=control_state[0].previous;
+                       L2=control_state[1].previous;
+                       L3=control_state[2].previous;
+                       L4=control_state[3].previous;
+                       F=control_state[4].previous;
+                       S=control_state[5].previous;
+    }
+}
+
+static void example_handle_gen_fan_msg(esp_ble_mesh_model_t *model,
+                                         esp_ble_mesh_msg_ctx_t *ctx,
+                                         esp_ble_mesh_server_recv_gen_level_set_t *set)
+{
+   // esp_ble_mesh_gen_onoff_srv_t *srv = model->user_data;
+    esp_ble_mesh_gen_level_srv_t *lvl =model->user_data;
+
+
+uint8_t status[2];
+
+    switch (ctx->recv_op) {
+    case ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_GET :
+     
+put_le16(status, lvl->state.level);
+esp_ble_mesh_server_model_send_msg(model, ctx,
+    ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_STATUS, sizeof(status), status);
+        ESP_LOGI(TAG, "get_level %d",lvl->state.level );
+        break;
+    case ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_SET:
+    case ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_SET_UNACK:
+        if (set->op_en == false) {
+            lvl->state.level = set->level;
+        } else {
+            /* TODO: Delay and state transition */
+            lvl->state.level = set->level;
+        }
+        if (ctx->recv_op == ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_SET) {
+            uint8_t status[2];
+put_le16(status, lvl->state.level);
+esp_ble_mesh_server_model_send_msg(model, ctx,
+    ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_STATUS, sizeof(status), status);
+        }       
+status[0] = (uint8_t)(lvl->state.level & 0xFF);
+status[1] = (uint8_t)((lvl->state.level >> 8) & 0xFF);
+
+esp_ble_mesh_model_publish(model, ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_STATUS,
+            sizeof(status), status, ROLE_NODE);
+        example_change_control_state(model, ctx, lvl->state.level);
+        break;
+    default:
+        break;
+    }
+
+
+}
+
+
 
 static void example_ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
                                              esp_ble_mesh_prov_cb_param_t *param)
@@ -280,6 +612,7 @@ static void example_ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_ev
                                                esp_ble_mesh_generic_server_cb_param_t *param)
 {
     esp_ble_mesh_gen_onoff_srv_t *srv;
+    esp_ble_mesh_gen_level_srv_t *lvl;
     ESP_LOGI(TAG, "event 0x%02x, opcode 0x%04" PRIx32 ", src 0x%04x, dst 0x%04x",
         event, param->ctx.recv_op, param->ctx.addr, param->ctx.recv_dst);
 
@@ -299,6 +632,11 @@ static void example_ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_ev
             ESP_LOGI(TAG, "onoff 0x%02x", srv->state.onoff);
             example_handle_gen_onoff_msg(param->model, &param->ctx, NULL);
         }
+          if (param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_GET) {
+                    lvl = param->model->user_data;
+                    ESP_LOGI(TAG, "level %d", lvl->state.level);
+                    example_handle_gen_fan_msg_recieve(param->model, &param->ctx, NULL);
+                }
         break;
     case ESP_BLE_MESH_GENERIC_SERVER_RECV_SET_MSG_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_GENERIC_SERVER_RECV_SET_MSG_EVT");
@@ -311,6 +649,15 @@ static void example_ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_ev
             }
             example_handle_gen_onoff_msg(param->model, &param->ctx, &param->value.set.onoff);
         }
+           if (param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_SET ||
+                    param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_LEVEL_SET_UNACK) {
+                    ESP_LOGI(TAG, "level %d, tid 0x%02x", param->value.set.level.level, param->value.set.level.tid);
+                    if (param->value.set.level.op_en) {
+                        ESP_LOGI(TAG, "trans_time 0x%02x, delay 0x%02x",
+                            param->value.set.level.trans_time, param->value.set.level.delay);
+                    }
+                    example_handle_gen_fan_msg(param->model, &param->ctx, &param->value.set.level);
+                }
         break;
     default:
         ESP_LOGE(TAG, "Unknown Generic Server event 0x%02x", event);

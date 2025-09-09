@@ -3,5 +3,7 @@
   "idf.espIdfPathWin": "D:/Espressif/frameworks/esp-idf-v5.5.1/",
   "idf.toolsPathWin": "D:\\Espressif",
   "idf.pythonInstallPath": "D:\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
-  "iis.configDir": ""
+  "iis.configDir": "",
+  "idf.portWin": "COM10",
+  "idf.flashType": "UART"
 }
