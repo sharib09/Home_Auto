@@ -6,6 +6,7 @@ idf_component_register(
     SRCS
         "main.c"
         "uart_rx.c"        
-        "board.c"          # <-- add this
+        "board.c" 
+        "system_task.c"         # <-- add this
         INCLUDE_DIRS  ".")
        

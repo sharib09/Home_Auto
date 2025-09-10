@@ -37,6 +37,7 @@
 #include "freertos/task.h"
 
 #include "uart_if.h"
+#include "system_task.h"
 
 // void System_operation_task(void *arg);
 // static void rx_task(void *arg);
@@ -62,15 +63,8 @@ bool last_L3_State=0;
 bool last_L4_State=0;
 bool last_S_State=0;
 
-bool L1;
-bool L2;
-bool L3;
-bool L4;
-bool F;
-bool FS1;
-bool FS2;
-bool FS3;
-bool S;
+volatile bool L1, L2, L3, L4, F, S, FS1, FS2, FS3; 
+
 
 #define RELAY1 19
 #define RELAY2 19
@@ -810,7 +804,25 @@ void app_main(void)
     //  xTaskCreate(System_operation_task, "operation_task", 1024*2, NULL, 15, NULL);
     // init();
     // xTaskCreate(rx_task, "uart_rx_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
-   // uart_rx_start();
+    uart_rx_start();
+    system_task_init();
+    system_task_start();
+  while (1) {
+        if (uart_recieve_flag) {
+            // Clear flag
+            uart_recieve_flag = false;
+
+            // Print the received value
+            printf("Received byte: %u (0x%02X)\n", ReceivedByte, ReceivedByte);
+
+            // You can also act based on the received value
+            if (ReceivedByte == 'A') {
+                printf("Got the letter A!\n");
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));  // sleep 100 ms
+    }
 }
 
 
@@ -870,170 +882,170 @@ void app_main(void)
 //}
 
 
-// void System_operation_task(void *arg)
+void System_operation_task(void *arg)
 
-// {
-//     /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
-//        muxed to GPIO on reset already, but some default to other
-//        functions and need to be switched to GPIO. Consult the
-//        Technical Reference for a list of pads and their default
-//        functions.)
-//     */
-//     // gpio_pad_select_gpio(RELAY1);
-//     // gpio_pad_select_gpio(RELAY2);
-//     // gpio_pad_select_gpio(RELAY3);
-//     // gpio_pad_select_gpio(RELAY4);
-//     // gpio_pad_select_gpio(RELAY5);
-//     // gpio_pad_select_gpio(RELAY6);
-//     // gpio_pad_select_gpio(RELAY7);
-//     // gpio_pad_select_gpio(RELAY8);
-//     // gpio_pad_select_gpio(RELAY9);
-//     // gpio_pad_select_gpio(DATA_PIN);
-//     // gpio_pad_select_gpio(CLOCK_PIN);
-//     // gpio_pad_select_gpio(LATCH_PIN);
-
-
-//     /* Set the GPIO as a push/pull output */
-//     gpio_set_direction(RELAY1, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY2, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY3, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY4, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY5, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY6, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY7, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY8, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(RELAY9, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(DATA_PIN, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(CLOCK_PIN, GPIO_MODE_OUTPUT);
-//     gpio_set_direction(LATCH_PIN, GPIO_MODE_OUTPUT);
-//     while(1) {
-//     	//vTaskSuspend(NULL);
-//     	vTaskDelay(10 / portTICK_PERIOD_MS);
-//         /* Blink off (output low) */
-//     	 bool L1_State = L1;
-//     	  if (L1_State != last_L1_State){
-//     		  last_L1_State = L1_State;
-//         gpio_set_level(RELAY1, L1_State);
-
-//     	  }
-
-//         bool L2_State = L2;
-//             	  if (L2_State != last_L2_State){
-//             		  last_L2_State = L2_State;
-//                 gpio_set_level(RELAY2, L2_State);
-//             	  }
-
-//                 bool L3_State = L3;
-//                 if (L3_State != last_L3_State){
-//                 last_L3_State = L3_State;
-//                 gpio_set_level(RELAY3, L3_State);
-//                 }
-//            bool L4_State = L4;
-//            if (L4_State != last_L4_State){
-//            last_L4_State = L4_State;
-//            gpio_set_level(RELAY4, L4_State);
-//           }
-
-//            bool F_State = F;
-//            if (F_State != last_F_State){
-//            last_F_State = F_State;
-//           // gpio_set_level(RELAY1, F_State);
-//            }
-//            uint8_t shift_value=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(S<<2)|(0<<1)|(0<<0);
-//            gpio_set_level(LATCH_PIN, 0);
-//           //         shift_Out(DATA_PIN,CLOCK_PIN,LSBFIRST,shift_value);
-//                    gpio_set_level(LATCH_PIN, 1);
-
-//            bool F1_State = FS1;
-//            bool F2_State = FS2;
-//            bool F3_State = FS3;
-//            if (F1_State != last_F1_State||F2_State != last_F2_State||F3_State != last_F3_State){
-//              last_F1_State = F1_State;
-//              last_F2_State = F2_State;
-//              last_F3_State = F3_State;
-//              if ((F3_State==0)&&(FS2==0)&&(F1_State==1)&&(F==1))
-//              		{
-//              			printf("FAN SPEED 1 \n");
-//              			gpio_set_level(RELAY5, 1);
-//              			gpio_set_level(RELAY6, 0);
-//              			gpio_set_level(RELAY7, 0);
-//              			gpio_set_level(RELAY8, 0);
-//              			gpio_set_level(5, 1);
-//              			gpio_set_level(32, 0);
-//              			gpio_set_level(33, 0);
+{
+    /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
+       muxed to GPIO on reset already, but some default to other
+       functions and need to be switched to GPIO. Consult the
+       Technical Reference for a list of pads and their default
+       functions.)
+    */
+    // gpio_pad_select_gpio(RELAY1);
+    // gpio_pad_select_gpio(RELAY2);
+    // gpio_pad_select_gpio(RELAY3);
+    // gpio_pad_select_gpio(RELAY4);
+    // gpio_pad_select_gpio(RELAY5);
+    // gpio_pad_select_gpio(RELAY6);
+    // gpio_pad_select_gpio(RELAY7);
+    // gpio_pad_select_gpio(RELAY8);
+    // gpio_pad_select_gpio(RELAY9);
+    // gpio_pad_select_gpio(DATA_PIN);
+    // gpio_pad_select_gpio(CLOCK_PIN);
+    // gpio_pad_select_gpio(LATCH_PIN);
 
 
-//              		}
-//              else if((F3_State==0)&&(FS2==1)&&(F1_State==0)&&(F==1))
-//              {
-//             	 printf("FAN SPEED 2 \n");
-//             	 gpio_set_level(RELAY5, 1);
-//             	              			gpio_set_level(RELAY6, 1);
-//             	              			gpio_set_level(RELAY7, 0);
-//             	              			gpio_set_level(RELAY8, 0);
-//             	              			gpio_set_level(32, 1);
-//             	              			gpio_set_level(33, 0);
-//             	              			gpio_set_level(5, 0);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(RELAY1, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY2, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY3, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY4, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY5, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY6, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY7, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY8, GPIO_MODE_OUTPUT);
+    gpio_set_direction(RELAY9, GPIO_MODE_OUTPUT);
+    gpio_set_direction(DATA_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(CLOCK_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(LATCH_PIN, GPIO_MODE_OUTPUT);
+    while(1) {
+    	//vTaskSuspend(NULL);
+    	vTaskDelay(10 / portTICK_PERIOD_MS);
+        /* Blink off (output low) */
+    	 bool L1_State = L1;
+    	  if (L1_State != last_L1_State){
+    		  last_L1_State = L1_State;
+        gpio_set_level(RELAY1, L1_State);
 
-//              }
-//              else if((F3_State==0)&&(FS2==1)&&(F1_State==1)&&(F==1))
-//              {
-//             	 printf("FAN SPEED 3 \n");
-//             	 gpio_set_level(RELAY5, 0);
-//             	              			gpio_set_level(RELAY6, 1);
-//             	              			gpio_set_level(RELAY7, 1);
-//             	              			gpio_set_level(RELAY8, 0);
-//             	              			gpio_set_level(33, 1);
-//             	              			gpio_set_level(32, 0);
-//             	              			gpio_set_level(5, 0);
-//              }
+    	  }
 
-//              else if((F3_State==1)&&(FS2==0)&&(F1_State==0)&&(F==1))
-//              {
-//             	 printf("FAN SPEED 4 \n");
-//             	 gpio_set_level(RELAY5, 1);
-//             	              			gpio_set_level(RELAY6, 1);
-//             	              			gpio_set_level(RELAY7, 1);
-//             	              			gpio_set_level(RELAY8, 0);
-//             	              			gpio_set_level(5, 1);
-//             	              			gpio_set_level(32, 1);
-//             	              			gpio_set_level(33, 0);
-//              }
-//              else if((F3_State==1)&&(FS2==0)&&(F1_State==1)&&(F==1))
-//              {
-//             	 printf("FAN SPEED 5 \n");
-//             	 gpio_set_level(RELAY5, 0);
-//             	              			gpio_set_level(RELAY6, 0);
-//             	              			gpio_set_level(RELAY7, 0);
-//             	              			gpio_set_level(RELAY8, 1);
-//             	              			gpio_set_level(33, 1);
-//             	              			gpio_set_level(5, 1);
-//             	              			gpio_set_level(32, 0);
-//              }
-//              else
-//              {
-//             	 gpio_set_level(RELAY5, 0);
-//             	             	              			gpio_set_level(RELAY6, 0);
-//             	             	              			gpio_set_level(RELAY7, 0);
-//             	             	              			gpio_set_level(RELAY8, 0);
-//             	             	              			gpio_set_level(33, 0);
-//             	             	              			gpio_set_level(5, 0);
+        bool L2_State = L2;
+            	  if (L2_State != last_L2_State){
+            		  last_L2_State = L2_State;
+                gpio_set_level(RELAY2, L2_State);
+            	  }
 
-//             	             	              			gpio_set_level(32, 0);
-//             	              }
-//              }
-//            bool S_State = S;
-//                               if (S_State != last_S_State){
-//                               last_S_State = S_State;
-//                               gpio_set_level(RELAY9, S_State);
+                bool L3_State = L3;
+                if (L3_State != last_L3_State){
+                last_L3_State = L3_State;
+                gpio_set_level(RELAY3, L3_State);
+                }
+           bool L4_State = L4;
+           if (L4_State != last_L4_State){
+           last_L4_State = L4_State;
+           gpio_set_level(RELAY4, L4_State);
+          }
 
-//               }
+           bool F_State = F;
+           if (F_State != last_F_State){
+           last_F_State = F_State;
+          // gpio_set_level(RELAY1, F_State);
+           }
+           uint8_t shift_value=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(S<<2)|(0<<1)|(0<<0);
+           gpio_set_level(LATCH_PIN, 0);
+          //         shift_Out(DATA_PIN,CLOCK_PIN,LSBFIRST,shift_value);
+                   gpio_set_level(LATCH_PIN, 1);
 
-//             }
+           bool F1_State = FS1;
+           bool F2_State = FS2;
+           bool F3_State = FS3;
+           if (F1_State != last_F1_State||F2_State != last_F2_State||F3_State != last_F3_State){
+             last_F1_State = F1_State;
+             last_F2_State = F2_State;
+             last_F3_State = F3_State;
+             if ((F3_State==0)&&(FS2==0)&&(F1_State==1)&&(F==1))
+             		{
+             			printf("FAN SPEED 1 \n");
+             			gpio_set_level(RELAY5, 1);
+             			gpio_set_level(RELAY6, 0);
+             			gpio_set_level(RELAY7, 0);
+             			gpio_set_level(RELAY8, 0);
+             			gpio_set_level(5, 1);
+             			gpio_set_level(32, 0);
+             			gpio_set_level(33, 0);
 
-//       //  vTaskDelay(1000 / portTICK_PERIOD_MS);
-//         /* Blink on (output high) */
-//        // gpio_set_level(BLINK_GPIO, 1);
-//       //  vTaskDelay(1000 / portTICK_PERIOD_MS);
-//       vTaskDelay(10 / portTICK_PERIOD_MS);
-//     }
+
+             		}
+             else if((F3_State==0)&&(FS2==1)&&(F1_State==0)&&(F==1))
+             {
+            	 printf("FAN SPEED 2 \n");
+            	 gpio_set_level(RELAY5, 1);
+            	              			gpio_set_level(RELAY6, 1);
+            	              			gpio_set_level(RELAY7, 0);
+            	              			gpio_set_level(RELAY8, 0);
+            	              			gpio_set_level(32, 1);
+            	              			gpio_set_level(33, 0);
+            	              			gpio_set_level(5, 0);
+
+             }
+             else if((F3_State==0)&&(FS2==1)&&(F1_State==1)&&(F==1))
+             {
+            	 printf("FAN SPEED 3 \n");
+            	 gpio_set_level(RELAY5, 0);
+            	              			gpio_set_level(RELAY6, 1);
+            	              			gpio_set_level(RELAY7, 1);
+            	              			gpio_set_level(RELAY8, 0);
+            	              			gpio_set_level(33, 1);
+            	              			gpio_set_level(32, 0);
+            	              			gpio_set_level(5, 0);
+             }
+
+             else if((F3_State==1)&&(FS2==0)&&(F1_State==0)&&(F==1))
+             {
+            	 printf("FAN SPEED 4 \n");
+            	 gpio_set_level(RELAY5, 1);
+            	              			gpio_set_level(RELAY6, 1);
+            	              			gpio_set_level(RELAY7, 1);
+            	              			gpio_set_level(RELAY8, 0);
+            	              			gpio_set_level(5, 1);
+            	              			gpio_set_level(32, 1);
+            	              			gpio_set_level(33, 0);
+             }
+             else if((F3_State==1)&&(FS2==0)&&(F1_State==1)&&(F==1))
+             {
+            	 printf("FAN SPEED 5 \n");
+            	 gpio_set_level(RELAY5, 0);
+            	              			gpio_set_level(RELAY6, 0);
+            	              			gpio_set_level(RELAY7, 0);
+            	              			gpio_set_level(RELAY8, 1);
+            	              			gpio_set_level(33, 1);
+            	              			gpio_set_level(5, 1);
+            	              			gpio_set_level(32, 0);
+             }
+             else
+             {
+            	 gpio_set_level(RELAY5, 0);
+            	             	              			gpio_set_level(RELAY6, 0);
+            	             	              			gpio_set_level(RELAY7, 0);
+            	             	              			gpio_set_level(RELAY8, 0);
+            	             	              			gpio_set_level(33, 0);
+            	             	              			gpio_set_level(5, 0);
+
+            	             	              			gpio_set_level(32, 0);
+            	              }
+             }
+           bool S_State = S;
+                              if (S_State != last_S_State){
+                              last_S_State = S_State;
+                              gpio_set_level(RELAY9, S_State);
+
+              }
+
+            }
+
+      //  vTaskDelay(1000 / portTICK_PERIOD_MS);
+        /* Blink on (output high) */
+       // gpio_set_level(BLINK_GPIO, 1);
+      //  vTaskDelay(1000 / portTICK_PERIOD_MS);
+      vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
