@@ -36,10 +36,12 @@
 #include <stdlib.h>
 #include "freertos/task.h"
 
-void System_operation_task(void *arg);
-static void rx_task(void *arg);
+#include "uart_if.h"
 
-void init(void);
+// void System_operation_task(void *arg);
+// static void rx_task(void *arg);
+
+// void init(void);
 
 
 
@@ -70,28 +72,30 @@ bool FS2;
 bool FS3;
 bool S;
 
-#define RELAY1 4
-#define RELAY2 16
-#define RELAY3 17
-#define RELAY4 18
+#define RELAY1 19
+#define RELAY2 19
+#define RELAY3 19
+#define RELAY4 19
 #define RELAY5 19
-#define RELAY6 23
-#define RELAY7 25
-#define RELAY8 26
-#define RELAY9 27
-#define DATA_PIN 12
-#define CLOCK_PIN 13
-#define LATCH_PIN 14
+#define RELAY6 19
+#define RELAY7 19
+#define RELAY8 19
+#define RELAY9 19
+#define DATA_PIN 19
+#define CLOCK_PIN 19
+#define LATCH_PIN 19
 #define LSBFIRST 00000001
 
 unsigned char control_data = 0;
-bool uart_recieve_flag = false;
-unsigned char recieved_control_data = 0;
-uint8_t ReceivedByte = 0;
 
-static const int RX_BUF_SIZE = 1024;
-#define TXD_PIN 17
-#define RXD_PIN 16
+unsigned char recieved_control_data = 0;
+
+volatile bool    uart_recieve_flag = false;
+volatile uint8_t ReceivedByte      = 0;
+
+//static const int RX_BUF_SIZE = 1024;
+#define TXD_PIN 1
+#define RXD_PIN 3
 
 #define TAG "EXAMPLE"
 
@@ -803,232 +807,233 @@ void app_main(void)
         ESP_LOGE(TAG, "Bluetooth mesh init failed (err %d)", err);
     }
 
-      xTaskCreate(System_operation_task, "operation_task", 1024*2, NULL, 15, NULL);
-    init();
-   // xTaskCreate(rx_task, "uart_rx_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
+    //  xTaskCreate(System_operation_task, "operation_task", 1024*2, NULL, 15, NULL);
+    // init();
+    // xTaskCreate(rx_task, "uart_rx_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
+   // uart_rx_start();
 }
 
 
-void init() {
-    const uart_config_t uart_config = {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
-    };
-    uart_param_config(UART_NUM_2, &uart_config);
-        uart_set_pin(UART_NUM_2, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-        // We won't use a buffer for sending data.
-        uart_driver_install(UART_NUM_2, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
-    }
+// void init() {
+//     const uart_config_t uart_config = {
+//         .baud_rate = 115200,
+//         .data_bits = UART_DATA_8_BITS,
+//         .parity = UART_PARITY_DISABLE,
+//         .stop_bits = UART_STOP_BITS_1,
+//         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
+//     };
+//     uart_param_config(UART_NUM_0, &uart_config);
+//         uart_set_pin(UART_NUM_0, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+//         // We won't use a buffer for sending data.
+//         uart_driver_install(UART_NUM_0, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
+//     }
 
 
-static void rx_task(void *arg)
+// static void rx_task(void *arg)
 
-{
-    static const char *RX_TASK_TAG = "RX_TASK";
-    esp_log_level_set(RX_TASK_TAG, ESP_LOG_INFO);
-    uint8_t* data = (uint8_t*) malloc(RX_BUF_SIZE+1);
-
-
-
-    while (1) {
-      const int rxBytes = uart_read_bytes(UART_NUM_2, data, RX_BUF_SIZE, 1000 / portTICK_PERIOD_MS);
-
-        if (rxBytes > 0) {
-        	uart_recieve_flag=true;
-            data[rxBytes] = 0;
-            ESP_LOGI(RX_TASK_TAG, "Read %d bytes: '%s'", rxBytes, data);
-            ESP_LOG_BUFFER_HEXDUMP(RX_TASK_TAG, data, rxBytes, ESP_LOG_INFO);
-            ESP_LOGI("data recieved","read %d value",data[0]);
-
-
-            ReceivedByte=data[0];
-            control_data=ReceivedByte;
-
-
-            control_state[0].previous=L1;
-                           control_state[1].previous=L2;
-                           control_state[2].previous=L3;
-                           control_state[3].previous=L4;
-                           control_state[4].previous=F;
+// {
+//     static const char *RX_TASK_TAG = "RX_TASK";
+//     esp_log_level_set(RX_TASK_TAG, ESP_LOG_INFO);
+//     uint8_t* data = (uint8_t*) malloc(RX_BUF_SIZE+1);
 
 
 
+//     while (1) {
+//       const int rxBytes = uart_read_bytes(UART_NUM_2, data, RX_BUF_SIZE, 1000 / portTICK_PERIOD_MS);
+
+//         if (rxBytes > 0) {
+//         	uart_recieve_flag=true;
+//             data[rxBytes] = 0;
+//             ESP_LOGI(RX_TASK_TAG, "Read %d bytes: '%s'", rxBytes, data);
+//             ESP_LOG_BUFFER_HEXDUMP(RX_TASK_TAG, data, rxBytes, ESP_LOG_INFO);
+//             ESP_LOGI("data recieved","read %d value",data[0]);
 
 
-        }
-    }
-    free(data);
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-}
+//             ReceivedByte=data[0];
+//             control_data=ReceivedByte;
 
 
-void System_operation_task(void *arg)
-
-{
-    /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
-       muxed to GPIO on reset already, but some default to other
-       functions and need to be switched to GPIO. Consult the
-       Technical Reference for a list of pads and their default
-       functions.)
-    */
-    // gpio_pad_select_gpio(RELAY1);
-    // gpio_pad_select_gpio(RELAY2);
-    // gpio_pad_select_gpio(RELAY3);
-    // gpio_pad_select_gpio(RELAY4);
-    // gpio_pad_select_gpio(RELAY5);
-    // gpio_pad_select_gpio(RELAY6);
-    // gpio_pad_select_gpio(RELAY7);
-    // gpio_pad_select_gpio(RELAY8);
-    // gpio_pad_select_gpio(RELAY9);
-    // gpio_pad_select_gpio(DATA_PIN);
-    // gpio_pad_select_gpio(CLOCK_PIN);
-    // gpio_pad_select_gpio(LATCH_PIN);
+//             control_state[0].previous=L1;
+//                            control_state[1].previous=L2;
+//                            control_state[2].previous=L3;
+//                            control_state[3].previous=L4;
+//                            control_state[4].previous=F;
 
 
-    /* Set the GPIO as a push/pull output */
-    gpio_set_direction(RELAY1, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY2, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY3, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY4, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY5, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY6, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY7, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY8, GPIO_MODE_OUTPUT);
-    gpio_set_direction(RELAY9, GPIO_MODE_OUTPUT);
-    gpio_set_direction(DATA_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(CLOCK_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(LATCH_PIN, GPIO_MODE_OUTPUT);
-    while(1) {
-    	//vTaskSuspend(NULL);
-    	vTaskDelay(10 / portTICK_PERIOD_MS);
-        /* Blink off (output low) */
-    	 bool L1_State = L1;
-    	  if (L1_State != last_L1_State){
-    		  last_L1_State = L1_State;
-        gpio_set_level(RELAY1, L1_State);
-
-    	  }
-
-        bool L2_State = L2;
-            	  if (L2_State != last_L2_State){
-            		  last_L2_State = L2_State;
-                gpio_set_level(RELAY2, L2_State);
-            	  }
-
-                bool L3_State = L3;
-                if (L3_State != last_L3_State){
-                last_L3_State = L3_State;
-                gpio_set_level(RELAY3, L3_State);
-                }
-           bool L4_State = L4;
-           if (L4_State != last_L4_State){
-           last_L4_State = L4_State;
-           gpio_set_level(RELAY4, L4_State);
-          }
-
-           bool F_State = F;
-           if (F_State != last_F_State){
-           last_F_State = F_State;
-          // gpio_set_level(RELAY1, F_State);
-           }
-           uint8_t shift_value=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(S<<2)|(0<<1)|(0<<0);
-           gpio_set_level(LATCH_PIN, 0);
-          //         shift_Out(DATA_PIN,CLOCK_PIN,LSBFIRST,shift_value);
-                   gpio_set_level(LATCH_PIN, 1);
-
-           bool F1_State = FS1;
-           bool F2_State = FS2;
-           bool F3_State = FS3;
-           if (F1_State != last_F1_State||F2_State != last_F2_State||F3_State != last_F3_State){
-             last_F1_State = F1_State;
-             last_F2_State = F2_State;
-             last_F3_State = F3_State;
-             if ((F3_State==0)&&(FS2==0)&&(F1_State==1)&&(F==1))
-             		{
-             			printf("FAN SPEED 1 \n");
-             			gpio_set_level(RELAY5, 1);
-             			gpio_set_level(RELAY6, 0);
-             			gpio_set_level(RELAY7, 0);
-             			gpio_set_level(RELAY8, 0);
-             			gpio_set_level(5, 1);
-             			gpio_set_level(32, 0);
-             			gpio_set_level(33, 0);
 
 
-             		}
-             else if((F3_State==0)&&(FS2==1)&&(F1_State==0)&&(F==1))
-             {
-            	 printf("FAN SPEED 2 \n");
-            	 gpio_set_level(RELAY5, 1);
-            	              			gpio_set_level(RELAY6, 1);
-            	              			gpio_set_level(RELAY7, 0);
-            	              			gpio_set_level(RELAY8, 0);
-            	              			gpio_set_level(32, 1);
-            	              			gpio_set_level(33, 0);
-            	              			gpio_set_level(5, 0);
 
-             }
-             else if((F3_State==0)&&(FS2==1)&&(F1_State==1)&&(F==1))
-             {
-            	 printf("FAN SPEED 3 \n");
-            	 gpio_set_level(RELAY5, 0);
-            	              			gpio_set_level(RELAY6, 1);
-            	              			gpio_set_level(RELAY7, 1);
-            	              			gpio_set_level(RELAY8, 0);
-            	              			gpio_set_level(33, 1);
-            	              			gpio_set_level(32, 0);
-            	              			gpio_set_level(5, 0);
-             }
+//         }
+//     }
+//     free(data);
+//     vTaskDelay(10 / portTICK_PERIOD_MS);
+//}
 
-             else if((F3_State==1)&&(FS2==0)&&(F1_State==0)&&(F==1))
-             {
-            	 printf("FAN SPEED 4 \n");
-            	 gpio_set_level(RELAY5, 1);
-            	              			gpio_set_level(RELAY6, 1);
-            	              			gpio_set_level(RELAY7, 1);
-            	              			gpio_set_level(RELAY8, 0);
-            	              			gpio_set_level(5, 1);
-            	              			gpio_set_level(32, 1);
-            	              			gpio_set_level(33, 0);
-             }
-             else if((F3_State==1)&&(FS2==0)&&(F1_State==1)&&(F==1))
-             {
-            	 printf("FAN SPEED 5 \n");
-            	 gpio_set_level(RELAY5, 0);
-            	              			gpio_set_level(RELAY6, 0);
-            	              			gpio_set_level(RELAY7, 0);
-            	              			gpio_set_level(RELAY8, 1);
-            	              			gpio_set_level(33, 1);
-            	              			gpio_set_level(5, 1);
-            	              			gpio_set_level(32, 0);
-             }
-             else
-             {
-            	 gpio_set_level(RELAY5, 0);
-            	             	              			gpio_set_level(RELAY6, 0);
-            	             	              			gpio_set_level(RELAY7, 0);
-            	             	              			gpio_set_level(RELAY8, 0);
-            	             	              			gpio_set_level(33, 0);
-            	             	              			gpio_set_level(5, 0);
 
-            	             	              			gpio_set_level(32, 0);
-            	              }
-             }
-           bool S_State = S;
-                              if (S_State != last_S_State){
-                              last_S_State = S_State;
-                              gpio_set_level(RELAY9, S_State);
+// void System_operation_task(void *arg)
 
-              }
+// {
+//     /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
+//        muxed to GPIO on reset already, but some default to other
+//        functions and need to be switched to GPIO. Consult the
+//        Technical Reference for a list of pads and their default
+//        functions.)
+//     */
+//     // gpio_pad_select_gpio(RELAY1);
+//     // gpio_pad_select_gpio(RELAY2);
+//     // gpio_pad_select_gpio(RELAY3);
+//     // gpio_pad_select_gpio(RELAY4);
+//     // gpio_pad_select_gpio(RELAY5);
+//     // gpio_pad_select_gpio(RELAY6);
+//     // gpio_pad_select_gpio(RELAY7);
+//     // gpio_pad_select_gpio(RELAY8);
+//     // gpio_pad_select_gpio(RELAY9);
+//     // gpio_pad_select_gpio(DATA_PIN);
+//     // gpio_pad_select_gpio(CLOCK_PIN);
+//     // gpio_pad_select_gpio(LATCH_PIN);
 
-            }
 
-      //  vTaskDelay(1000 / portTICK_PERIOD_MS);
-        /* Blink on (output high) */
-       // gpio_set_level(BLINK_GPIO, 1);
-      //  vTaskDelay(1000 / portTICK_PERIOD_MS);
-      vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
+//     /* Set the GPIO as a push/pull output */
+//     gpio_set_direction(RELAY1, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY2, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY3, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY4, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY5, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY6, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY7, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY8, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(RELAY9, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(DATA_PIN, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(CLOCK_PIN, GPIO_MODE_OUTPUT);
+//     gpio_set_direction(LATCH_PIN, GPIO_MODE_OUTPUT);
+//     while(1) {
+//     	//vTaskSuspend(NULL);
+//     	vTaskDelay(10 / portTICK_PERIOD_MS);
+//         /* Blink off (output low) */
+//     	 bool L1_State = L1;
+//     	  if (L1_State != last_L1_State){
+//     		  last_L1_State = L1_State;
+//         gpio_set_level(RELAY1, L1_State);
+
+//     	  }
+
+//         bool L2_State = L2;
+//             	  if (L2_State != last_L2_State){
+//             		  last_L2_State = L2_State;
+//                 gpio_set_level(RELAY2, L2_State);
+//             	  }
+
+//                 bool L3_State = L3;
+//                 if (L3_State != last_L3_State){
+//                 last_L3_State = L3_State;
+//                 gpio_set_level(RELAY3, L3_State);
+//                 }
+//            bool L4_State = L4;
+//            if (L4_State != last_L4_State){
+//            last_L4_State = L4_State;
+//            gpio_set_level(RELAY4, L4_State);
+//           }
+
+//            bool F_State = F;
+//            if (F_State != last_F_State){
+//            last_F_State = F_State;
+//           // gpio_set_level(RELAY1, F_State);
+//            }
+//            uint8_t shift_value=(L1<<7)|(L2<<6)|(L3<<5)|(L4<<4)|(F<<3)|(S<<2)|(0<<1)|(0<<0);
+//            gpio_set_level(LATCH_PIN, 0);
+//           //         shift_Out(DATA_PIN,CLOCK_PIN,LSBFIRST,shift_value);
+//                    gpio_set_level(LATCH_PIN, 1);
+
+//            bool F1_State = FS1;
+//            bool F2_State = FS2;
+//            bool F3_State = FS3;
+//            if (F1_State != last_F1_State||F2_State != last_F2_State||F3_State != last_F3_State){
+//              last_F1_State = F1_State;
+//              last_F2_State = F2_State;
+//              last_F3_State = F3_State;
+//              if ((F3_State==0)&&(FS2==0)&&(F1_State==1)&&(F==1))
+//              		{
+//              			printf("FAN SPEED 1 \n");
+//              			gpio_set_level(RELAY5, 1);
+//              			gpio_set_level(RELAY6, 0);
+//              			gpio_set_level(RELAY7, 0);
+//              			gpio_set_level(RELAY8, 0);
+//              			gpio_set_level(5, 1);
+//              			gpio_set_level(32, 0);
+//              			gpio_set_level(33, 0);
+
+
+//              		}
+//              else if((F3_State==0)&&(FS2==1)&&(F1_State==0)&&(F==1))
+//              {
+//             	 printf("FAN SPEED 2 \n");
+//             	 gpio_set_level(RELAY5, 1);
+//             	              			gpio_set_level(RELAY6, 1);
+//             	              			gpio_set_level(RELAY7, 0);
+//             	              			gpio_set_level(RELAY8, 0);
+//             	              			gpio_set_level(32, 1);
+//             	              			gpio_set_level(33, 0);
+//             	              			gpio_set_level(5, 0);
+
+//              }
+//              else if((F3_State==0)&&(FS2==1)&&(F1_State==1)&&(F==1))
+//              {
+//             	 printf("FAN SPEED 3 \n");
+//             	 gpio_set_level(RELAY5, 0);
+//             	              			gpio_set_level(RELAY6, 1);
+//             	              			gpio_set_level(RELAY7, 1);
+//             	              			gpio_set_level(RELAY8, 0);
+//             	              			gpio_set_level(33, 1);
+//             	              			gpio_set_level(32, 0);
+//             	              			gpio_set_level(5, 0);
+//              }
+
+//              else if((F3_State==1)&&(FS2==0)&&(F1_State==0)&&(F==1))
+//              {
+//             	 printf("FAN SPEED 4 \n");
+//             	 gpio_set_level(RELAY5, 1);
+//             	              			gpio_set_level(RELAY6, 1);
+//             	              			gpio_set_level(RELAY7, 1);
+//             	              			gpio_set_level(RELAY8, 0);
+//             	              			gpio_set_level(5, 1);
+//             	              			gpio_set_level(32, 1);
+//             	              			gpio_set_level(33, 0);
+//              }
+//              else if((F3_State==1)&&(FS2==0)&&(F1_State==1)&&(F==1))
+//              {
+//             	 printf("FAN SPEED 5 \n");
+//             	 gpio_set_level(RELAY5, 0);
+//             	              			gpio_set_level(RELAY6, 0);
+//             	              			gpio_set_level(RELAY7, 0);
+//             	              			gpio_set_level(RELAY8, 1);
+//             	              			gpio_set_level(33, 1);
+//             	              			gpio_set_level(5, 1);
+//             	              			gpio_set_level(32, 0);
+//              }
+//              else
+//              {
+//             	 gpio_set_level(RELAY5, 0);
+//             	             	              			gpio_set_level(RELAY6, 0);
+//             	             	              			gpio_set_level(RELAY7, 0);
+//             	             	              			gpio_set_level(RELAY8, 0);
+//             	             	              			gpio_set_level(33, 0);
+//             	             	              			gpio_set_level(5, 0);
+
+//             	             	              			gpio_set_level(32, 0);
+//             	              }
+//              }
+//            bool S_State = S;
+//                               if (S_State != last_S_State){
+//                               last_S_State = S_State;
+//                               gpio_set_level(RELAY9, S_State);
+
+//               }
+
+//             }
+
+//       //  vTaskDelay(1000 / portTICK_PERIOD_MS);
+//         /* Blink on (output high) */
+//        // gpio_set_level(BLINK_GPIO, 1);
+//       //  vTaskDelay(1000 / portTICK_PERIOD_MS);
+//       vTaskDelay(10 / portTICK_PERIOD_MS);
+//     }
